@@ -1,9 +1,7 @@
-// Also: Tests, documentation comments, work out how to structure package for crates.io
-  // TODO: Second collision test after pad is updated. Current collision rate when hashing moby dick: .002% on 31k unique 'words'.
-  //       This extrapolates out to 83% at 13,000,000 ((2^n/2) where n=48) keys, which is double what we want. .001% at 31k would be much better.
-// TODO: Optimize
+// TODO: Rustdoc comments, work out how to structure package for crates.io
 // TODO: Add tests
-// TODO: Add benchmarking
+// TODO: Add support for HashMap
+// TODO: impl Hasher for all rust primitives
 
 // Primary Hasher Implementation
 fn run_hash (mut input: (Vec<u8>, Vec<u8>)) -> String {
@@ -94,14 +92,43 @@ impl Hasher for String {
     }
 }
 
+impl Hasher for usize {
+    fn convert_to_bytes(&self) -> Vec<u8> {
+        let mut newvec: Vec<u8> = Vec::new();
+        newvec.extend(self.to_be_bytes());
+
+        return newvec;
+    }
+}
+
 // API
 // This trait must be implemented for any type you wish to be compatible with the hasher
+/// This needs implemented in order to run hash on your custom types. 
+/// Already implemented for rust primitives and String.
+/// 
+/// ```
+/// // Example of how you might implement this to work on a simple struct
+/// ```
 pub trait Hasher {
     fn convert_to_bytes (&self) -> Vec<u8>;
 }
 
-// The primary way to use hashdozen
-pub fn hash<'a, T: Hasher> (input: &T, salt: &T) -> Result<String, &'a str> {
+/// This is the primary public interface for HashDozen.
+/// 
+/// The function declaration should be fairly self explanatory.
+/// You may notice that the types are trait bounded to Hasher. If you have custom types you wish to
+/// implement, please see the documentation for the trait.
+/// 
+/// It expects an input and a salt, every time. It's up to you how to generate the salt, and they can 
+/// be different types.
+/// 
+/// ```
+/// // Usage Example
+/// let test1 = 23890423984;
+/// let test2 = String::from("Test2asfasfdsaf");
+/// println!("{}",hashdozen::hash(&test1, &test2).unwrap()); 
+/// ```
+pub fn hash<'a, D: Hasher, S: Hasher> (input: &D, salt: &S) -> Result<String, &'a str> {
     let hashinput = input.convert_to_bytes();
     let saltinput = salt.convert_to_bytes();
 
