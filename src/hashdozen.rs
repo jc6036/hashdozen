@@ -1,5 +1,4 @@
 // Also: Tests, documentation comments, work out how to structure package for crates.io
-// TODO: Choose a better pad than 255. Predictable pads are one of the number one sources of collision.
   // TODO: Second collision test after pad is updated. Current collision rate when hashing moby dick: .002% on 31k unique 'words'.
   //       This extrapolates out to 83% at 13,000,000 ((2^n/2) where n=48) keys, which is double what we want. .001% at 31k would be much better.
 // TODO: Optimize
@@ -9,7 +8,7 @@
 // Primary Hasher Implementation
 fn run_hash (mut input: (Vec<u8>, Vec<u8>)) -> String {
     // Pad out to multiple of 6 bytes
-    pad (&mut input, &(255, 255));
+    pad (&mut input);
 
     // Compress each vec into one block
     let datablocks = compress(input);
@@ -21,13 +20,15 @@ fn run_hash (mut input: (Vec<u8>, Vec<u8>)) -> String {
     return format_hash(finaldata);
 }
 
-fn pad(data: &mut (Vec<u8>, Vec<u8>), padvals: &(u8, u8)) {
+fn pad(data: &mut (Vec<u8>, Vec<u8>)) {
+    data.0.extend(data.0.len().to_be_bytes());
     while data.0.len() % 6 > 0 {
-        data.0.push(padvals.0);
+        data.0.push(255);
     }
 
+    data.1.extend(data.1.len().to_be_bytes());
     while data.1.len() % 6 > 0 {
-        data.1.push(padvals.1);
+        data.1.push(255);
     }
 }
 
