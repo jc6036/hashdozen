@@ -2,6 +2,13 @@
 name = "hashdozen"
 version = "0.1.0"
 edition = "2021"
+license = "GPL v3.0"
+description = "A novel 48 bit hashing algorithm producing human-readables hashes."
+homepage = "https://github.com/jc6036/hashdozen"
+repository = "https://github.com/jc6036/hashdozen"
+readme = "README.md"
+categories = ["algorithms"]
+keywords = ["hashing", "human", "readable", "fast", "small"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
