@@ -2,7 +2,7 @@
 name = "hashdozen"
 version = "0.1.0"
 edition = "2021"
-license = "GPL v3.0"
+license = "GPL-3.0-or-later"
 description = "A novel 48 bit hashing algorithm producing human-readables hashes."
 homepage = "https://github.com/jc6036/hashdozen"
 repository = "https://github.com/jc6036/hashdozen"
