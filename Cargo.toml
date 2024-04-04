@@ -10,6 +10,10 @@ readme = "README.md"
 categories = ["algorithms"]
 keywords = ["hashing", "human", "readable", "fast", "small"]
 
+exclude = [
+    "/.vscode/*",
+]
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
