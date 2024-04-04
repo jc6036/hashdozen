@@ -1,10 +1,3 @@
-// TODO: Rustdoc comments, work out how to structure package for crates.io
-// TODO: Add tests
-// TODO: Add support for HashMap
-// TODO: impl Hasher for all rust primitives
-// TODO: Remove salt, add utility method to generate a salted value as an option
-// TODO: Alter the pad to cut down on repeated pad values
-
 // Primary Hasher Implementation
 fn run_hash (mut input: Vec<u8>) -> String {
     // Pad out to multiple of 6 bytes
@@ -54,67 +47,70 @@ fn format_hash(data: Vec<u8>) -> String {
     return outstr;
 }
 
-// Type Implementations
-
-// std::String
-impl Hasher for String {
-    fn convert_to_bytes (&self) -> Vec<u8> {
-        let mut newvec: Vec<u8> = Vec::new();
-        for i in self.as_bytes() {
-            newvec.push(*i);
-        }
-        return newvec;
-    }
-}
-
-impl Hasher for usize {
-    fn convert_to_bytes(&self) -> Vec<u8> {
-        let mut newvec: Vec<u8> = Vec::new();
-        newvec.extend(self.to_be_bytes());
-
-        return newvec;
-    }
-}
-
-impl Hasher for Vec<u8> {
-    fn convert_to_bytes(&self) -> Vec<u8> {
-        self.clone()
-    }
-}
-
-
-/// This needs implemented in order to run hash on your custom types. 
-/// Already implemented for rust primitives and String.
-pub trait Hasher {
-    fn convert_to_bytes (&self) -> Vec<u8>;
-}
 
 /// This is the primary public interface for HashDozen.
 /// 
-/// The function declaration should be fairly self explanatory.
-/// You may notice that the type is trait bounded to Hasher. If you have custom types you wish to
-/// implement, please see the documentation for the trait.
-pub fn hash<'a, T: Hasher> (input: &T) -> Result<String, &'a str> {
-    let hashinput = input.convert_to_bytes();    
+/// ```
+/// // Usage example
+/// use std::string::String;
+/// use hashdozen::hashdozen;
+/// 
+/// let data_str = String::from("Test hash string!");
+/// println!("{}", hashdozen::hash(Vec::<u8>::from(data_str)));
+/// ```
+/// 
+/// Please note that passing in an unsalted piece of data is not recommended. You can either supply your own salt,
+/// or use generate_salt() from this library. There is also a shortcut method salt_then_hash() to run both the salt
+/// then this hash method in sequence.
+pub fn hash (input: Vec<u8>) -> String {
+    let hashinput = Vec::<u8>::from(input);  
 
-    if hashinput.len() == 0 {
-        let ret: &'a str = "Input can not be empty.";
-        return Result::Err(ret);
-    }
-
-    return Ok(run_hash(hashinput));
+    return run_hash(hashinput);
 }
 
-/// Takes a data value that must implement Hasher and convert_to_bytes, then returns it salted.
+/// Takes a data value, then returns it salted.
 /// 
 /// Recommended to run this when creating input for the hasher, but feel free to replace it with whatever
 /// salting process you wish.
-pub fn generate_salt<T: Hasher> (input: &T) -> Vec<u8> {
-    let mut input = input.convert_to_bytes();
+/// 
+/// ```
+/// // An example of what your data may look like pre and post salting
+/// use std::string::String;
+/// use hashdozen::hashdozen;
+/// 
+/// let unsalted_str = String::from("Unsalted Data!");
+/// let unsalted_data = Vec::<u8>::from(unsalted_str);
+/// println!("{:x?}", unsalted_data); // Let's see what our unsalted String looks like inside the vector...
+/// let salted_data = hashdozen::generate_salted_input(unsalted_data); // Salt it
+/// println!("{:x?}", salted_data);
+/// 
+/// // Note that this returns a Vec<u8>, because not all salts are guranteed to be valid UTF representations.
+/// // You can try to convert if you want to see it as char data, but you will need to do error handling on the transform.
+/// let salted_str = String::from_utf8(salted_data).unwrap();
+/// println!("{}", salted_str);
+/// ```
+pub fn generate_salted_input (input: Vec<u8>) -> Vec<u8> {
+    let mut input = Vec::<u8>::from(input);//input.convert_to_bytes();
 
     let salt: Vec<u8> = input.iter().zip(input.iter().rev()).map(|(x1, x2)| (x1 | x2) ^ (x1 & x2)).collect();
 
     input.append(&mut salt.clone());
 
     input
+}
+
+/// A shortcut to add a salt to your input then hash it rather than doing so separately.
+/// 
+/// ```
+/// // Usage
+/// use std::string::String;
+/// use hashdozen::hashdozen;
+/// 
+/// let data_str = String::from("Hash Foo Hash Bar");
+/// println!("{}", hashdozen::salt_then_hash(Vec::<u8>::from(data_str)));
+/// ```
+pub fn salt_then_hash(input: Vec<u8>) -> String {
+    let saltydata = generate_salted_input(input);
+
+    hash(saltydata)
 }
